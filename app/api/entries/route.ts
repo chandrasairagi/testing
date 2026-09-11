@@ -29,7 +29,8 @@ export async function GET(request:NextRequest){
   const gated=p.get("gated");if(gated==="true"||gated==="false")q=q.eq("gated",gated==="true");
   const locality=p.get("locality");if(locality?.trim())q=q.ilike("locality",`%${locality.trim().slice(0,80)}%`);
   const {data,error}=await q;if(error){console.error("entries GET error",error);return NextResponse.json({error:"Could not load rental entries."},{status:500});}
-  return NextResponse.json({entries:(data??[]).map(row=>publicEntry(row as Record<string,unknown>))},{headers:{"Cache-Control":"public, s-maxage=15, stale-while-revalidate=45"}});
+  const rows=(data??[]) as unknown as Record<string,unknown>[];
+  return NextResponse.json({entries:rows.map(publicEntry)},{headers:{"Cache-Control":"public, s-maxage=15, stale-while-revalidate=45"}});
 }
 
 export async function POST(request:NextRequest){
@@ -47,5 +48,5 @@ export async function POST(request:NextRequest){
   if(insertError||!createdId){console.error("entries POST error",insertError);return NextResponse.json({error:"Could not save the entry."},{status:500});}
   const {data:created,error:fetchError}=await supabase.from("rent_entries").select(PUBLIC_COLUMNS).eq("id",createdId).single();
   if(fetchError||!created){console.error("entries POST fetch error",fetchError);return NextResponse.json({id:createdId},{status:201});}
-  return NextResponse.json({entry:publicEntry(created as Record<string,unknown>)},{status:201});
+  return NextResponse.json({entry:publicEntry(created as unknown as Record<string,unknown>)},{status:201});
 }
