@@ -1,0 +1,10 @@
+"use client";
+
+import { useState } from "react";
+
+export default function EntryActions({entryId,title}:{entryId:string;title:string}){
+  const [reportOpen,setReportOpen]=useState(false),[reason,setReason]=useState("not_available"),[details,setDetails]=useState(""),[status,setStatus]=useState(""),[submitting,setSubmitting]=useState(false);
+  async function share(){const url=window.location.href;if(navigator.share){try{await navigator.share({title,url});return;}catch{}}try{await navigator.clipboard.writeText(url);setStatus("Link copied.");}catch{setStatus("Copy the page URL from your browser to share it.");}}
+  async function submitReport(){setSubmitting(true);setStatus("");try{const r=await fetch("/api/reports",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({entry_id:entryId,reason,details})});const j=await r.json();if(!r.ok)throw new Error(j.error||"Could not send report.");setStatus("Thanks. The report was recorded for moderation.");setReportOpen(false);setDetails("");}catch(e){setStatus(e instanceof Error?e.message:"Could not send report.");}finally{setSubmitting(false);}}
+  return <div><div className="action-row"><button className="button button-dark" onClick={share}>Share</button><button className="button button-soft" onClick={()=>setReportOpen(v=>!v)}>Report listing/data</button></div>{reportOpen&&<div className="report-form"><select value={reason} onChange={e=>setReason(e.target.value)}><option value="not_available">No longer available</option><option value="wrong_price">Incorrect rent / price</option><option value="duplicate">Duplicate</option><option value="spam">Spam / fake</option><option value="other">Other</option></select><textarea rows={3} value={details} onChange={e=>setDetails(e.target.value)} placeholder="Optional details"/><button className="button button-green" disabled={submitting} onClick={submitReport}>{submitting?"Sending…":"Submit report"}</button></div>}{status&&<div className="status-message">{status}</div>}</div>;
+}
