@@ -8,7 +8,6 @@ export function getSupabaseServer() {
   const key = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_PUBLISHABLE_KEY;
 
   return createClient(url, key, {
-    db: { schema: "api" },
     auth: {
       persistSession: false,
       autoRefreshToken: false,
